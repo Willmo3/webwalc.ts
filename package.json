@@ -1,0 +1,14 @@
+{
+  "name": "webwalc-frontend",
+  "version": "1.0.0",
+  "description": "TypeScript frontend for web calculator",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc index.ts"
+  },
+  "author": "Will Morris",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.5.4"
+  }
+}
