@@ -4,11 +4,14 @@
   "description": "TypeScript frontend for web calculator",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc index.ts"
+    "build": "npx tsc index.ts",
+    "start": "npx tsx index.ts"
   },
   "author": "Will Morris",
   "license": "MIT",
   "dependencies": {
+    "tsx": "^4.19.0",
     "typescript": "^5.5.4"
-  }
+  },
+  "type": "module"
 }
