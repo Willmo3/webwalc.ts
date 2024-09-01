@@ -1,3 +1,4 @@
-import { lex } from './lexer'
+import {lex} from "./lexer";
 
-console.log("Hello, world!")
+const program = "3 + 5 - -8";
+console.log(lex(program));

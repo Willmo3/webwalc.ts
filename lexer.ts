@@ -1,15 +1,16 @@
-// TypeScript lexer for
+// TypeScript lexer for a simple calculator.
+// Author: Will Morris
 
-
-
-// Inter
+// Interface for the lexeme.
 export interface Lexeme {
-    Type: 'Number' | 'OpenParen' | 'CloseParen' | 'Plus' | 'Minus' | 'Star' | 'Slash' | 'EOF';
+    type: 'Number' | 'OpenParen' | 'CloseParen' | 'Plus' | 'Minus' | 'Star' | 'Slash' | 'EOF';
+    value?: Number; // Only a value if token is of type number.
 }
 
 export function lex(data: string): Array<Lexeme> {
-    const tokens: Array<Lexeme> = []
-    return tokens
+    const lexer = new Lexer(data);
+    lexer.lex();
+    return lexer.lexemes;
 }
 
 // Lexer helper class.
@@ -24,31 +25,47 @@ class Lexer {
         this.lexemes = [];
     }
 
-    LexNext(): Lexeme {
+    lex() {
+        let lexeme = this.lexNext();
+        while (lexeme.type !== 'EOF') {
+            this.lexemes.push(lexeme);
+            lexeme = this.lexNext();
+        }
+        // Push EOF lexeme
+        this.lexemes.push(lexeme);
+    }
+
+    lexNext(): Lexeme {
         while (this.whitespace()) {
             this.skip();
         }
         // If after skipping whitespace out of bounds, return EOF
         if (!this.inBounds()) {
-            return { Type: 'EOF' };
+            return { type: 'EOF' };
         }
 
         const start = this.next();
         switch (start) {
-            case '(': return { Type: 'OpenParen' };
-            case ')': return { Type: 'CloseParen' };
-            case '*': return { Type: 'Star' };
-            case '/': return { Type: 'Slash'};
-            case '+': return { Type: 'Plus' };
+            case '(': return { type: 'OpenParen' };
+            case ')': return { type: 'CloseParen' };
+            case '*': return { type: 'Star' };
+            case '/': return { type: 'Slash'};
+            case '+': return { type: 'Plus' };
             case '-': {
                 // minus can be the start of a number or just a minus sign.
                 if (this.inBounds() && this.number()) {
-                    // TODO: implement number parsing.
+                    return this.lexNumber(start);
                 } else {
-                    return { Type: 'Minus' }
+                    return { type: 'Minus' };
                 }
             }
-
+            default: {
+                if (this.isNumeric(start)) {
+                    return this.lexNumber(start);
+                } else {
+                    throw new Error("Unexpected character: " + this.current());
+                }
+            }
         }
     }
 
@@ -56,16 +73,27 @@ class Lexer {
 
     // Lex a numeric literal, starting with char.
     // All numbers are converted to floats.
-    lex_number(start: string): Lexeme {
+    lexNumber(start: string): Lexeme {
         if (!this.isNumeric(start) && !(start == '-')) throw new Error('Invalid number');
 
-        while (this.inBounds() && this.current() != '.') {
-            start += this.current();
+        while (this.inBounds() && this.number()) {
+            start += this.next();
         }
 
         // If the next character isn't a decimal point, we've got an integer.
         if (!this.inBounds() || this.current() != '.') {
+            return { type: 'Number', value: Number(start) };
         }
+
+        // Otherwise, keep parsing a float.
+        start += this.next();
+        if (!this.inBounds() || !this.number()) throw new Error('Unterminated float!');
+
+        while (this.inBounds() && this.number()) {
+            start += this.next();
+        }
+
+        return { type: 'Number', value: Number(start) };
     }
 
 
@@ -105,7 +133,7 @@ class Lexer {
         return this.isNumeric(this.current());
     }
     isNumeric(char: string): boolean {
-        return !isNaN(Number(char));
+        return char != ' ' && !isNaN(Number(char));
     }
 
     whitespace(): boolean {
